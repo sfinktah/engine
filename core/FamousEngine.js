@@ -103,6 +103,7 @@ FamousEngine.prototype.init = function init(options) {
     this.compositor = options && options.compositor || new Compositor();
     this.renderLoop = options && options.renderLoop || new RequestAnimationFrameLoop();
     this.uiManager = new UIManager(this.getChannel(), this.compositor, this.renderLoop);
+    window._famousEngine = this; // debugging global -- cjl
     return this;
 };
 

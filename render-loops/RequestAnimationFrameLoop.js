@@ -252,6 +252,31 @@ RequestAnimationFrameLoop.prototype.step = function step (time) {
     return this;
 };
 
+window.perfmon = window.perfmon || (function() {
+  var nCounter = 0;
+  var nNoUpdates = 0;
+  var listener;
+  var interval = setInterval(function() {
+     if (nCounter === 0) {
+        if (nNoUpdates < 4 && nNoUpdates > 2) console.log('perfmon: quiet for ' + nNoUpdates + ' seconds');
+        if (++nNoUpdates === 5) window.stopFuckingAnimating = true;
+     } else {
+        if (nNoUpdates) console.log('perfmon: ' + nCounter);
+        nNoUpdates = 0;
+        nCounter = 0;
+        window.stopFuckingAnimating = false;
+     }
+  }, 1000);
+
+  listener = window.addEventListener('DOMSubtreeModified', function(a) {
+    ++nCounter;
+  });
+  return {
+    counter: nCounter,
+    inactive: nNoUpdates,
+    listener: listener
+  };
+})();
 /**
  * Method being called by `requestAnimationFrame` on every paint. Indirectly
  * recursive by scheduling a future invocation of itself on the next paint.
@@ -262,9 +287,25 @@ RequestAnimationFrameLoop.prototype.step = function step (time) {
  * method on all registered objects
  * @return {RequestAnimationFrameLoop} this
  */
+var now = Date.now ? Date.now : function () {
+   return new Date().getTime();
+};
+var rAFbyTimeout = function(callback, time) {
+   var currTime = now();
+   var timeToCall = time;
+   var id = setTimeout(function () {
+      callback(currTime + timeToCall);
+   }, timeToCall);
+   return id;
+};
+window.stopFuckingAnimating = false;
 RequestAnimationFrameLoop.prototype.loop = function loop(time) {
     this.step(time);
-    this._rAF = rAF(this._looper);
+    if (window.stopFuckingAnimating) {
+       this._rAF = rAFbyTimeout(this._looper, 100);
+    } else {
+       this._rAF = rAFbyTimeout(this._looper, 16);
+    }
     return this;
 };
 

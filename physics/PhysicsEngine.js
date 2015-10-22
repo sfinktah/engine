@@ -441,6 +441,13 @@ function _integrateVelocity(body, dt) {
     body.torque.clear();
 }
 
+function log(namesString, values) {
+    var messages = {}
+    var names = namesString.split(','), i, len, v;
+    // {a:{value:1}}
+    for (i = 0, len = names.length; i < len; i++) messages[names[i].trim()] = {value: arguments[i+1]};
+    if ((typeof console !== "undefined" && console !== null ? console.table : null ) != null) {console.table(messages);}
+}
 /**
  * Update the Particle position and orientation based off current translational and angular velocities.
  *
@@ -471,7 +478,12 @@ function _integratePose(body, dt) {
         if (ax !== null || ay !== null || az !== null) body.setAngularVelocity(ax, ay, az);
     }
 
+    if (Math.abs(body.velocity.x) < 0.01 && Math.abs(body.velocity.y) < 0.01 && Math.abs(body.velocity.z) < 0.01) { //  < 0 && body.velocity.z > -0.0001) {
+       // window.stopFuckingAnimating = true;
+       return;
+    }
     body.position.add(Vec3.scale(body.velocity, dt, DELTA_REGISTER));
+    // log('body.velocity.x, body.velocity.y, body.velocity.z', body.velocity.x, body.velocity.y, body.velocity.z);
 
     var w = body.angularVelocity;
     var q = body.orientation;
