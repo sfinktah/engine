@@ -237,6 +237,7 @@ DOMElement.prototype.setCutoutState = function setCutoutState (usesCutout) {
     return this;
 };
 
+// XXX
 /**
  * Method to be invoked by the node as soon as the transform matrix associated
  * with the node changes. The DOMElement will react to transform changes by sending

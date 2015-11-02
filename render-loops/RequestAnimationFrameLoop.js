@@ -252,19 +252,21 @@ RequestAnimationFrameLoop.prototype.step = function step (time) {
     return this;
 };
 
-window.perfmon = window.perfmon || (function() {
+var stopFuckingAnimating = false;
+window.stopFuckingAnimating = false;
+var perfmon = (function() {
   var nCounter = 0;
   var nNoUpdates = 0;
   var listener;
   var interval = setInterval(function() {
      if (nCounter === 0) {
         if (nNoUpdates < 4 && nNoUpdates > 2) console.log('perfmon: quiet for ' + nNoUpdates + ' seconds');
-        if (++nNoUpdates === 5) window.stopFuckingAnimating = true;
+        if (++nNoUpdates === 5) window.stopFuckingAnimating = stopFuckingAnimating = true;
      } else {
         if (nNoUpdates) console.log('perfmon: ' + nCounter);
         nNoUpdates = 0;
         nCounter = 0;
-        window.stopFuckingAnimating = false;
+        window.stopFuckingAnimating = stopFuckingAnimating = false;
      }
   }, 1000);
 
@@ -287,25 +289,12 @@ window.perfmon = window.perfmon || (function() {
  * method on all registered objects
  * @return {RequestAnimationFrameLoop} this
  */
-var now = Date.now ? Date.now : function () {
-   return new Date().getTime();
-};
-var rAFbyTimeout = function(callback, time) {
-   var currTime = now();
-   var timeToCall = time;
-   var id = setTimeout(function () {
-      callback(currTime + timeToCall);
-   }, timeToCall);
-   return id;
-};
-window.stopFuckingAnimating = false;
+var _loopCounter = 0;
 RequestAnimationFrameLoop.prototype.loop = function loop(time) {
-    this.step(time);
-    if (window.stopFuckingAnimating) {
-       this._rAF = rAFbyTimeout(this._looper, 100);
-    } else {
-       this._rAF = rAFbyTimeout(this._looper, 16);
+    if (!window.stopFuckingAnimating || !(++_loopCounter & 0x7)) {
+        this.step(time);
     }
+    this._rAF = rAF(this._looper);
     return this;
 };
 

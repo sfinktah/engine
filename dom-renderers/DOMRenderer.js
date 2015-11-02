@@ -31,7 +31,7 @@ var vendorPrefix = require('../utilities/vendorPrefix');
 var CallbackStore = require('../utilities/CallbackStore');
 var eventMap = require('./events/EventMap');
 
-var TRANSFORM = null;
+var TRANSFORM = 'fakeTransform';
 
 /**
  * DOMRenderer is a class responsible for adding elements
@@ -91,6 +91,7 @@ function DOMRenderer (element, selector, compositor) {
     this._VPtransform = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
     this._lastEv = null;
+    this._lastTransform = [];
 }
 
 
@@ -304,8 +305,15 @@ DOMRenderer.prototype.draw = function draw(renderState) {
 
     if (renderState.viewDirty || renderState.perspectiveDirty) {
         math.multiply(this._VPtransform, this.perspectiveTransform, renderState.viewTransform);
-        this._root.element.style[TRANSFORM] = this._stringifyMatrix(this._VPtransform);
+        var newMatrix = this._stringifyMatrix(this._VPtransform);
+        if (~this._lastTransform.indexOf(newMatrix)) return;
+        // if (this._lastTransform) { console.log(this._lastTransform + "\n" +  newMatrix); }
+        this._lastTransform.push(this._target.element.style[TRANSFORM] = newMatrix);
+        if (this._lastTransform.length > 4) {
+            this._lastTransform = this._lastTransform.slice(-4);
+        }
     }
+    // Error: Could not retrieve WebGL context. Please refer to https://www.khronos.org/webgl/ for requirements
 };
 
 
